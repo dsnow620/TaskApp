@@ -1,0 +1,196 @@
+﻿@{ ViewData["Title"] = "Home Page"; }
+
+
+<style>
+h2 {
+color: #333;
+font-size: 24px;
+margin-bottom: 20px;
+}
+
+.task-section {
+margin-bottom: 40px;
+}
+
+.task {
+padding: 10px;
+border: 1px solid #ccc;
+background-color: #f9f9f9;
+margin-bottom: 10px;
+}
+
+.task h4 {
+margin-top: 0;
+}
+
+.task p {
+margin-bottom: 5px;
+}
+
+.task-actions button {
+margin-right: 10px;
+padding: 5px 10px;
+border: none;
+background-color: #4CAF50;
+color: #fff;
+cursor: pointer;
+}
+
+.task-actions button:hover {
+background-color: #45a049;
+}
+
+.form-group {
+margin-bottom: 10px;
+}
+
+label {
+display: block;
+margin-bottom: 5px;
+font-weight: bold;
+}
+
+input[type="text"] {
+width: 100%;
+padding: 5px;
+border: 1px solid #ccc;
+border-radius: 4px;
+}
+
+button[type="submit"] {
+padding: 10px 20px;
+border: none;
+background-color: #4CAF50;
+color: #fff;
+cursor: pointer;
+}
+
+button[type="submit"]:hover {
+background-color: #45a049;
+}
+</style>
+
+<div class="text-center">
+    <h1 class="display-4">Task management application</h1>
+</div>
+
+
+@model List<TaskViewModel>
+
+
+<div id="todo" class="task-section">
+        @foreach (var task in Model.Where(t => t.Status == "To Do"))
+        {
+        <h3>To Do</h3>
+        <div class="task">
+        <h4>Title: @task.Title</h4>
+        <p>Description: @task.Description</p>
+        <p>Created By: @task.CreatedBy</p>
+        <p>Assigned To: @task.AssignedTo</p>
+        <p>Due Date: @task.DueDt.ToString("MM/dd/yyyy HH:mm")</p>
+        <div class="task-actions">
+        <button onclick="editTask(@task.Id)">Edit</button>
+        <button onclick="deleteTask(@task.Id)">Delete</button>
+        </div>
+        </div>
+        }
+</div>
+
+<div id="inprogress" class="task-section">
+        @foreach (var task in Model.Where(t => t.Status == "In Progress"))
+        {
+        <h3>In Progress</h3>
+        <div class="task">
+        <h4>Title: @task.Title</h4>
+        <p>Description: @task.Description</p>
+        <p>Created By: @task.CreatedBy</p>
+        <p>Assigned To: @task.AssignedTo</p>
+        <p>Due Date: @task.DueDt.ToString("MM/dd/yyyy HH:mm")</p>
+        <div class="task-actions">
+        <button onclick="editTask(@task.Id)">Edit</button>
+        <button onclick="deleteTask(@task.Id)">Delete</button>
+        </div>
+        </div>
+        }
+</div>
+
+<div id="completed" class="task-section">
+        @foreach (var task in Model.Where(t => t.Status == "Completed"))
+        {
+        <h3>Completed</h3>
+        <div class="task">
+        <h4>Title: @task.Title</h4>
+        <p>Description: @task.Description</p>
+        <p>Created By: @task.CreatedBy</p>
+        <p>Assigned To: @task.AssignedTo</p>
+        <p>Due Date: @task.DueDt.ToString("MM/dd/yyyy HH:mm")</p>
+        <div class="task-actions">
+        <button onclick="editTask(@task.Id)">Edit</button>
+        <button onclick="deleteTask(@task.Id)">Delete</button>
+        </div>
+        </div>
+        }
+</div>
+
+
+<script>
+function editTask(id) {
+// Redirect to the edit page
+window.location.href = "/Task/Edit/" + id;
+}
+
+function deleteTask(id) {
+if (confirm("Are you sure you want to delete this task?")) {
+/
+$.ajax({
+url: "/Task/Delete/" + id,
+type: "POST",
+success: function () {
+
+
+$("#task-" + id).remove();
+},
+error: function () {
+alert("An error occurred while deleting the task.");
+}
+});
+}
+}
+</script>
+
+
+<h2>Create Task</h2>
+
+<form method="post" action="/Task/Create" onsubmit="return validateForm()">
+<div class="form-group">
+        <label for="Title">Title:</label>
+        <input type="text" id="Title" name="Title" class="form-control" required>
+
+        <label for="Description">Description:</label>
+        <input type="text" id="Description" name="Description" class="form-control" required>
+
+        <label for="CreatedBy">CreatedBy:</label>
+        <input type="text" id="CreatedBy" name="CreatedBy" class="form-control" required>
+
+        <label for="AssignedTo">AssignedTo:</label>
+        <input type="text" id="AssignedTo" name="AssignedTo" class="form-control" required>
+
+        <label for="DueDt">DueDt:</label>
+        <input type="text" id="DueDt" name="DueDt" class="form-control" required>
+</div>
+
+<button type="submit" class="btn btn-primary">Create</button>
+</form>
+
+
+<script>
+function validateForm() {
+var title = document.getElementById("Title").value;
+if (title == "") {
+alert("Please enter a title.");
+return false;
+}
+
+return true;
+}
+</script>
