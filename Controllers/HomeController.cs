@@ -48,6 +48,7 @@ namespace TaskApp.Controllers
         [HttpPost]
         public IActionResult Create(TaskViewModel task)
         {
+
             if (ModelState.IsValid)
             {
                 InsertTask(task);
@@ -84,6 +85,11 @@ namespace TaskApp.Controllers
             return RedirectToAction("Index");
         }
 
+
+        ///--------------------------------------------------------------------------------
+        /// <summary> Get list of tasks </summary>
+        /// <returns> Returns model view of tasks </returns>
+        ///--------------------------------------------------------------------------------
         private List<TaskViewModel> GetTasks()
         {
 
@@ -91,8 +97,6 @@ namespace TaskApp.Controllers
 
             try
             {
-
-                DateTime test = DateTime.Now;
 
                 using (var connection = CreateAndOpenSqliteConnection())
                 {
@@ -111,10 +115,7 @@ namespace TaskApp.Controllers
                                 task.Status = reader.GetString(3);
                                 task.CreatedBy = reader.GetString(4);
                                 task.AssignedTo = reader.GetString(5);
-                                //task.DueDt = test;
-                                //2/8/2024 5:03:46 PM
                                 task.DueDt = Convert.ToDateTime(reader.GetString(6));
-                                //reader.GetString(5).ToString("dddd, dd MMMM yyyy HH:mm:ss"));
 
                                 tasks.Add(task);
                             }
@@ -129,113 +130,170 @@ namespace TaskApp.Controllers
             catch(Exception e) 
             {
 
-
+                Console.WriteLine("error occured: " + e.StackTrace);
             }
 
                 return tasks;
             }
 
+        ///--------------------------------------------------------------------------------
+        /// <summary> Get task by Id</summary>
+        /// <returns> Returns model view of task </returns>
+        ///--------------------------------------------------------------------------------
         private TaskViewModel GetTaskById(int id)
         {
 
             TaskViewModel task = new TaskViewModel();
 
-            using (var connection = CreateAndOpenSqliteConnection())
+
+            try
             {
-                connection.Open();
-                string query = "SELECT * FROM Task WHERE Id = @Id";
 
-                using (SQLiteCommand command = new SQLiteCommand(query, connection))
+                using (var connection = CreateAndOpenSqliteConnection())
                 {
+                    connection.Open();
+                    string query = "SELECT * FROM Task WHERE Id = @Id";
 
-                    command.Parameters.AddWithValue("@Id", id); 
-                    using (SQLiteDataReader reader = command.ExecuteReader())
+                    using (SQLiteCommand command = new SQLiteCommand(query, connection))
                     {
 
-                        while (reader.Read())
+                        command.Parameters.AddWithValue("@Id", id);
+                        using (SQLiteDataReader reader = command.ExecuteReader())
                         {
-                            task.Id = reader.GetInt32(0);
-                            task.Title = reader.GetString(1);
-                            task.Description = reader.GetString(2);
-                            task.Status = reader.GetString(3);
-                            task.CreatedBy = reader.GetString(4);
-                            task.AssignedTo = reader.GetString(5);
-                            task.DueDt = reader.GetDateTime(6);
-                        }
 
-                        return task;
+                            while (reader.Read())
+                            {
+                                task.Id = reader.GetInt32(0);
+                                task.Title = reader.GetString(1);
+                                task.Description = reader.GetString(2);
+                                task.Status = reader.GetString(3);
+                                task.CreatedBy = reader.GetString(4);
+                                task.AssignedTo = reader.GetString(5);
+                                task.DueDt = reader.GetDateTime(6);
+                            }
+
+                        }
                     }
                 }
             }
+
+            catch (Exception e)
+            {
+                Console.WriteLine("error occured: " + e.StackTrace);
+
+            }
+
+            return task;
+
         }
 
+        ///--------------------------------------------------------------------------------
+        /// <summary> Insert task </summary>
+        ///--------------------------------------------------------------------------------
         private void InsertTask(TaskViewModel task)
         {
-            using (var connection = CreateAndOpenSqliteConnection())
-            {
-                connection.Open();
-                string query = "INSERT INTO Task (Title, Description, Status, CreatedBy, AssignedTo, DueDt) " +
-                "VALUES (@Title, @Description, @Status, @CreatedBy, @AssignedTo, @DueDt)";
 
-                using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
+            try
+            {
+
+                using (var connection = CreateAndOpenSqliteConnection())
                 {
-                    cmd.Parameters.AddWithValue("@Title", task.Title);
-                    cmd.Parameters.AddWithValue("@Description", task.Description);
-                    cmd.Parameters.AddWithValue("@Status", task.Status);
-                    cmd.Parameters.AddWithValue("@CreatedBy", task.CreatedBy);
-                    cmd.Parameters.AddWithValue("@AssignedTo", task.AssignedTo);
-                    cmd.Parameters.AddWithValue("@DueDt", task.DueDt);
-                    var result = cmd.ExecuteNonQuery();
+                    string query = "INSERT INTO Task (Title, Description, Status, CreatedBy, AssignedTo, DueDt) " +
+                    "VALUES (@Title, @Description, @Status, @CreatedBy, @AssignedTo, @DueDt)";
+
+                    using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Title", task.Title);
+                        cmd.Parameters.AddWithValue("@Description", task.Description);
+                        cmd.Parameters.AddWithValue("@Status", task.Status);
+                        cmd.Parameters.AddWithValue("@CreatedBy", task.CreatedBy);
+                        cmd.Parameters.AddWithValue("@AssignedTo", task.AssignedTo);
+                        cmd.Parameters.AddWithValue("@DueDt", task.DueDt);
+                        var result = cmd.ExecuteNonQuery();
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine("error occured: " + e.StackTrace);
+
+            }
+
         }
 
+        ///--------------------------------------------------------------------------------
+        /// <summary> Update task </summary>
+        ///--------------------------------------------------------------------------------
         private void UpdateTask(TaskViewModel task)
         {
-            using (var connection = CreateAndOpenSqliteConnection())
+            try
             {
-                connection.Open();
-                string query = "UPDATE Task " +
-                "SET Title = @Title, Description = @Description, Status = @Status, " +
-                "CreatedBy = @CreatedBy, AssignedTo = @AssignedTo, DueDt = @DueDt " +
-                "WHERE Id = @Id";
 
-                using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
+                using (var connection = CreateAndOpenSqliteConnection())
                 {
-                    cmd.Parameters.AddWithValue("@Id", task.Id);
-                    cmd.Parameters.AddWithValue("@Title", task.Title);
-                    cmd.Parameters.AddWithValue("@Description", task.Description);
-                    cmd.Parameters.AddWithValue("@Status", task.Status);
-                    cmd.Parameters.AddWithValue("@CreatedBy", task.CreatedBy);
-                    cmd.Parameters.AddWithValue("@AssignedTo", task.AssignedTo);
-                    cmd.Parameters.AddWithValue("@DueDt", task.DueDt);
-                    var result = cmd.ExecuteNonQuery();
+
+                    string query = "UPDATE Task " +
+                    "SET Title = @Title, Description = @Description, Status = @Status, " +
+                    "CreatedBy = @CreatedBy, AssignedTo = @AssignedTo, DueDt = @DueDt " +
+                    "WHERE Id = @Id";
+
+                    using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Id", task.Id);
+                        cmd.Parameters.AddWithValue("@Title", task.Title);
+                        cmd.Parameters.AddWithValue("@Description", task.Description);
+                        cmd.Parameters.AddWithValue("@Status", task.Status);
+                        cmd.Parameters.AddWithValue("@CreatedBy", task.CreatedBy);
+                        cmd.Parameters.AddWithValue("@AssignedTo", task.AssignedTo);
+                        cmd.Parameters.AddWithValue("@DueDt", task.DueDt);
+                        var result = cmd.ExecuteNonQuery();
+                    }
                 }
             }
+            catch (Exception e)
+            {
+
+                Console.WriteLine("error occured: " + e.StackTrace);
+            }
+
         }
 
+        ///--------------------------------------------------------------------------------
+        /// <summary> Delete task </summary>
+        ///--------------------------------------------------------------------------------
         private void DeleteTask(int id)
         {
-            using (var connection = CreateAndOpenSqliteConnection())
-            {
-                connection.Open();
-                string query = "DELETE FROM Task WHERE Id = @Id";
 
-                using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
+            try
+            {
+
+                using (var connection = CreateAndOpenSqliteConnection())
                 {
-                    cmd.Parameters.AddWithValue("@Id", id);
-                  
-                    var result = cmd.ExecuteNonQuery();
+
+                    string query = "DELETE FROM Task WHERE Id = @Id";
+
+                    using (SQLiteCommand cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Id", id);
+
+                        var result = cmd.ExecuteNonQuery();
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine("error occured: " + e.StackTrace);
+
+            }
+
         }
 
 
-    ///--------------------------------------------------------------------------------
-    /// <summary> The error action. </summary>
-    /// <returns> A response to return to the caller. </returns>
-    ///--------------------------------------------------------------------------------
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        ///--------------------------------------------------------------------------------
+        /// <summary> The error action. </summary>
+        /// <returns> A response to return to the caller. </returns>
+        ///--------------------------------------------------------------------------------
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
