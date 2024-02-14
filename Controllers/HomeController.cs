@@ -151,7 +151,6 @@ namespace TaskApp.Controllers
 
                 using (var connection = CreateAndOpenSqliteConnection())
                 {
-                    connection.Open();
                     string query = "SELECT * FROM Task WHERE Id = @Id";
 
                     using (SQLiteCommand command = new SQLiteCommand(query, connection))

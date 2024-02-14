@@ -85,21 +85,21 @@ background-color: #45a049;
         <h3>To Do</h3>
         <div class="task" id="view" style="display:block;">
                 <p>Id: @task.Id</p>
-                <h4>Title: @task.Title</h4>
+                <p>Title: @task.Title</p>
                 <p>Description: @task.Description</p>
                 <p>Status: @task.Status</p>
                 <p>Created By: @task.CreatedBy</p>
                 <p>Assigned To: @task.AssignedTo</p>
                 <p>Due Date: @task.DueDt.ToString("yyyy-MM-dd")</p>
-                <div class="task-actions">
-                <button onclick="editTask(@task.Id)">Edit</button>
+                <div class="task-actions" id="taskactions">
+                <button onclick="editTask(this, @task.Id, false)">Edit</button>
                 <button onclick="deleteTask(@task.Id)">Delete</button>
                 </div>
             </div>
 
-        <div id="edit" style="display:none;">
+        <div id="edit" class="edit" style="display:none;">
 
-            <form method="post" onsubmit="return validateForm()" action="/Home/Edit/">
+            <form method="post" onsubmit="return validateForm()" action="/Home/Edit/" >
                 <div class="form-group">
                     <input type="text" id="Id" name="Id" value="@task.Id" class="form-control" style="display:none;" required>
 
@@ -122,8 +122,8 @@ background-color: #45a049;
                     <input type="date" id="DueDt" name="DueDt" value="@task.DueDt.ToString("yyyy-MM-dd")" class="form-control" required text />
                 </div>
 
-                <button type="submit" class="btn btn-primary" onclick="editTask(@task.Id)">Update</button>
-                <button type="submit" class="btn btn-cancel" onclick="editTask(@task.Id)">Cancel</button>
+                <button type="submit" class="btn btn-primary" onclick="editTask(this, @task.Id, true)">Update</button>
+                <button type="submit" class="btn btn-cancel" onclick="cancelTask(this); return false;">Cancel</button>
             </form>
 
             </div>
@@ -165,11 +165,41 @@ background-color: #45a049;
 
 <script>
 
-    // load edit task view when edit button is clicked
-    function editTask(id) {
+    //Genereate Unique Id for the tasks
+    var tasks = document.querySelectorAll('.task');
+    for (var i = 0; i < tasks.length; i++) {
+        tasks[i].id = 'task-' + (i + 1);
+    }
 
-        var div = document.getElementById('view');
-        var div2 = document.getElementById('edit');
+    var editTasks = document.querySelectorAll('.edit');
+    for (var i = 0; i < editTasks.length; i++) {
+        editTasks[i].id = 'edit-' + (i + 1);
+    }
+
+
+    var editTasks = document.querySelectorAll('.form-group');
+    for (var i = 0; i < editTasks.length; i++) {
+        editTasks[i].id = 'form-group-' + (i + 1);
+    }
+
+    
+    // load edit task view when edit button is clicked
+    function editTask(button, id, editSubmit) {
+
+        //display the edit div if editSubmit true, if false, display task (view) div
+        if (!editSubmit) {
+            var viewId = button.parentNode.parentNode.id;
+            var editId = viewId.replace("task", "edit");
+        }
+        else{
+
+            var editId = button.parentNode.parentNode.id;
+            var viewId = editId.replace("edit", "task");
+           
+        }
+
+        var div = document.getElementById(viewId);
+        var div2 = document.getElementById(editId);
 
         if (div.style.display !== 'none') {
             div.style.display = 'none';
@@ -180,6 +210,25 @@ background-color: #45a049;
             div2.style.display = 'none';
         }
 
+    }
+
+    function cancelTask(button){
+
+        //display the task (view) div
+        var editId = button.parentNode.parentNode.id;
+        var viewId = editId.replace("edit", "task");
+
+        var div = document.getElementById(viewId);
+        var div2 = document.getElementById(editId);
+
+        if (div.style.display !== 'none') {
+            div.style.display = 'none';
+            div2.style.display = 'block';
+        }
+        else {
+            div.style.display = 'block';
+            div2.style.display = 'none';
+        }
 
     }
 
@@ -191,6 +240,7 @@ background-color: #45a049;
                 url: "/Home/Delete/" + id,
                 type: "POST",
                 success: function () {
+                    location.reload();
                 },
                 error: function () {
                     alert("An error occurred while deleting the task.");
